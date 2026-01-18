@@ -7,6 +7,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Admin\AuthController as AdminAuthController;
+use App\Http\Controllers\Api\V1\Admin\AdminManagementController;
 
 Route::prefix('v1')->group(function () {
     
@@ -25,5 +27,29 @@ Route::prefix('v1')->group(function () {
             Route::post('logout', [AuthController::class, 'logout']);
             Route::post('logout-all', [AuthController::class, 'logoutAllDevices']);
         });
+    });
+});
+
+// Admin Routes
+Route::prefix('v1/admin')->group(function () {
+    
+    // Public admin routes
+    Route::post('auth/login', [AdminAuthController::class, 'login']);
+
+    // Protected admin routes
+    Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+        Route::prefix('auth')->group(function () {
+            Route::get('me', [AdminAuthController::class, 'me']);
+            Route::post('logout', [AdminAuthController::class, 'logout']);
+            Route::post('logout-all', [AdminAuthController::class, 'logoutAllDevices']);
+            Route::post('change-password', [AdminAuthController::class, 'changePassword']);
+        });
+    });
+
+    // Super admin only routes
+    Route::middleware(['auth:sanctum', 'admin', 'super_admin'])->group(function () {
+        Route::apiResource('admins', AdminManagementController::class);
+        Route::post('admins/{admin}/deactivate', [AdminManagementController::class, 'deactivate']);
+        Route::post('admins/{admin}/activate', [AdminManagementController::class, 'activate']);
     });
 });
