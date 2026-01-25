@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Api\V1\Admin\AdminManagementController;
+use App\Http\Controllers\Api\V1\User\PackageController as UserPackageController;
+use App\Http\Controllers\Api\V1\Admin\PackageController as AdminPackageController;
+
 
 Route::prefix('v1')->group(function () {
     
@@ -51,5 +54,25 @@ Route::prefix('v1/admin')->group(function () {
         Route::apiResource('admins', AdminManagementController::class);
         Route::post('admins/{admin}/deactivate', [AdminManagementController::class, 'deactivate']);
         Route::post('admins/{admin}/activate', [AdminManagementController::class, 'activate']);
+    });
+});
+
+// Package Routes
+Route::prefix('v1')->group(function () {
+    
+    // Public package routes (users & guests)
+    Route::prefix('packages')->group(function () {
+        Route::get('/', [UserPackageController::class, 'index']);
+        Route::get('/featured', [UserPackageController::class, 'featured']);
+        Route::get('/filter', [UserPackageController::class, 'filter']);
+        Route::get('/search', [UserPackageController::class, 'search']);
+        Route::get('/{slug}', [UserPackageController::class, 'show']);
+    });
+
+    // Admin package routes
+    Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+        Route::apiResource('packages', AdminPackageController::class);
+        Route::post('packages/{id}/toggle-status', [AdminPackageController::class, 'toggleStatus']);
+        Route::post('packages/{id}/toggle-featured', [AdminPackageController::class, 'toggleFeatured']);
     });
 });

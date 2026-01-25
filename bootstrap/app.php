@@ -16,7 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
         'super_admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
     ]);
-})
+    })
+    ->withProviders([
+        App\Providers\RepositoryServiceProvider::class,  // ← Add this line
+    ])
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
