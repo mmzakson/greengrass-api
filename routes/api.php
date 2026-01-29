@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\User\PackageController as UserPackageController;
 use App\Http\Controllers\Api\V1\Admin\PackageController as AdminPackageController;
 use App\Http\Controllers\Api\V1\User\BookingController as UserBookingController;
 use App\Http\Controllers\Api\V1\Admin\BookingController as AdminBookingController;
+use App\Http\Controllers\Api\V1\TravelerController;
 
 
 
@@ -104,5 +105,22 @@ Route::prefix('v1')->group(function () {
         Route::post('bookings/{id}/confirm', [AdminBookingController::class, 'confirm']);
         Route::post('bookings/{id}/cancel', [AdminBookingController::class, 'cancel']);
         Route::put('bookings/{id}/notes', [AdminBookingController::class, 'updateNotes']);
+    });
+});
+
+// Traveler Routes
+Route::prefix('v1')->group(function () {
+    
+    // Traveler routes (require authentication or booking ownership)
+    Route::prefix('bookings/{bookingId}/travelers')->group(function () {
+        Route::post('/', [TravelerController::class, 'store']);
+        Route::get('/validate', [TravelerController::class, 'validateDocuments']);
+    });
+
+    Route::prefix('travelers')->group(function () {
+        Route::get('/{travelerId}', [TravelerController::class, 'show']);
+        Route::put('/{travelerId}', [TravelerController::class, 'update']);
+        Route::delete('/{travelerId}', [TravelerController::class, 'destroy']);
+        Route::get('/{travelerId}/passport/download', [TravelerController::class, 'downloadPassport']);
     });
 });
