@@ -1,0 +1,48 @@
+<?php
+
+namespace App\Http\Resources\Booking;
+
+use App\Http\Resources\Package\PackageListResource;
+use App\Http\Resources\UserResource;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class BookingDetailResource extends JsonResource
+{
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'booking_reference' => $this->booking_reference,
+            'customer' => [
+                'name' => $this->customer_name,
+                'email' => $this->customer_email,
+                'phone' => $this->customer_phone,
+                'is_guest' => $this->is_guest_booking,
+            ],
+            'user' => $this->user ? new UserResource($this->user) : null,
+            'package' => new PackageListResource($this->travelPackage),
+            'travel_date' => $this->travel_date->toDateString(),
+            'number_of_travelers' => $this->number_of_travelers,
+            'number_of_adults' => $this->number_of_adults,
+            'number_of_children' => $this->number_of_children,
+            'travelers' => TravelerResource::collection($this->travelers),
+            'total_amount' => (float) $this->total_amount,
+            'amount_paid' => (float) $this->amount_paid,
+            'amount_due' => (float) $this->amount_due,
+            'payment_status' => $this->payment_status,
+            'booking_status' => $this->booking_status,
+            'special_requests' => $this->special_requests,
+            'notes' => $this->notes,
+            'is_confirmed' => $this->is_confirmed,
+            'is_cancelled' => $this->is_cancelled,
+            'is_paid' => $this->is_paid,
+            'can_be_cancelled' => $this->can_be_cancelled,
+            'confirmed_at' => $this->confirmed_at?->toISOString(),
+            'cancelled_at' => $this->cancelled_at?->toISOString(),
+            'cancellation_reason' => $this->cancellation_reason,
+            'created_at' => $this->created_at->toISOString(),
+            'updated_at' => $this->updated_at->toISOString(),
+        ];
+    }
+}

@@ -11,6 +11,9 @@ use App\Http\Controllers\Api\V1\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Api\V1\Admin\AdminManagementController;
 use App\Http\Controllers\Api\V1\User\PackageController as UserPackageController;
 use App\Http\Controllers\Api\V1\Admin\PackageController as AdminPackageController;
+use App\Http\Controllers\Api\V1\User\BookingController as UserBookingController;
+use App\Http\Controllers\Api\V1\Admin\BookingController as AdminBookingController;
+
 
 
 Route::prefix('v1')->group(function () {
@@ -74,5 +77,32 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('packages', AdminPackageController::class);
         Route::post('packages/{id}/toggle-status', [AdminPackageController::class, 'toggleStatus']);
         Route::post('packages/{id}/toggle-featured', [AdminPackageController::class, 'toggleFeatured']);
+    });
+});
+
+// Booking Routes
+Route::prefix('v1')->group(function () {
+    
+    // Public booking routes
+    Route::get('bookings/reference/{reference}', [UserBookingController::class, 'getByReference']);
+    
+    // Guest booking creation
+    Route::post('bookings', [UserBookingController::class, 'store']);
+
+    // Protected user booking routes
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('bookings', [UserBookingController::class, 'index']);
+        Route::get('bookings/{id}', [UserBookingController::class, 'show']);
+        Route::post('bookings/{id}/cancel', [UserBookingController::class, 'cancel']);
+        Route::post('bookings/{id}/travelers', [UserBookingController::class, 'addTraveler']);
+    });
+
+    // Admin booking routes
+    Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+        Route::get('bookings', [AdminBookingController::class, 'index']);
+        Route::get('bookings/{id}', [AdminBookingController::class, 'show']);
+        Route::post('bookings/{id}/confirm', [AdminBookingController::class, 'confirm']);
+        Route::post('bookings/{id}/cancel', [AdminBookingController::class, 'cancel']);
+        Route::put('bookings/{id}/notes', [AdminBookingController::class, 'updateNotes']);
     });
 });

@@ -13,6 +13,11 @@ class RepositoryServiceProvider extends ServiceProvider
             \App\Repositories\Eloquent\TravelPackageRepository::class
         );
 
+        $this->app->bind(
+            \App\Repositories\Contracts\BookingRepositoryInterface::class,
+            \App\Repositories\Eloquent\BookingRepository::class
+        );
+
         // Add other repository bindings here
     }
 
