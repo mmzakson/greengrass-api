@@ -113,7 +113,7 @@ class Booking extends Model
         return "{$this->guest_first_name} {$this->guest_last_name}";
     }
 
-    public function getCustomerEmailAttribute(): string
+    public function getCustomerEmailAttribute(): ?string
     {
         return $this->user_id ? $this->user->email : $this->guest_email;
     }

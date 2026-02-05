@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\Admin\PackageController as AdminPackageControlle
 use App\Http\Controllers\Api\V1\User\BookingController as UserBookingController;
 use App\Http\Controllers\Api\V1\Admin\BookingController as AdminBookingController;
 use App\Http\Controllers\Api\V1\TravelerController;
+use App\Http\Controllers\Api\V1\User\BookingSummaryController;
 
 
 
@@ -89,6 +90,10 @@ Route::prefix('v1')->group(function () {
     
     // Guest booking creation
     Route::post('bookings', [UserBookingController::class, 'store']);
+
+    // Booking summary (get pricing breakdown before booking)
+    Route::post('bookings/summary', [BookingSummaryController::class, 'getSummary']);
+    
 
     // Protected user booking routes
     Route::middleware(['auth:sanctum'])->group(function () {

@@ -51,7 +51,7 @@ class BookingController extends Controller
      * Create new booking
      */
     public function store(CreateBookingRequest $request): JsonResponse
-    {
+    {        
         try {
             $userId = auth()->check() ? auth()->id() : null;
             

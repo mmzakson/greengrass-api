@@ -4,7 +4,7 @@ namespace App\Http\Requests\Booking;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CreateBookingRequest extends FormRequest
+class CreateGroupBookingRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -20,7 +20,7 @@ class CreateBookingRequest extends FormRequest
             'number_of_children' => ['nullable', 'integer', 'min:0', 'max:30'],
             'special_requests' => ['nullable', 'string', 'max:2000'],
             
-            // Guest fields - optional, will be validated conditionally
+            // Guest fields
             'guest_first_name' => ['nullable', 'string', 'max:255'],
             'guest_last_name' => ['nullable', 'string', 'max:255'],
             'guest_email' => ['nullable', 'email', 'max:255'],
@@ -47,7 +47,6 @@ class CreateBookingRequest extends FormRequest
     {
         return [
             'travel_package_id.required' => 'Please select a travel package',
-            'travel_package_id.exists' => 'Selected package does not exist',
             'travel_date.required' => 'Please select a travel date',
             'travel_date.after' => 'Travel date must be in the future',
             'number_of_adults.required' => 'Please specify number of adults',
@@ -68,22 +67,6 @@ class CreateBookingRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            // Check if user is authenticated
-            $isAuthenticated = request()->bearerToken() !== null;
-            
-            // If not authenticated, require guest fields
-            if (!$isAuthenticated) {
-                if (empty($this->guest_first_name)) {
-                    $validator->errors()->add('guest_first_name', 'First name is required for guest bookings');
-                }
-                if (empty($this->guest_last_name)) {
-                    $validator->errors()->add('guest_last_name', 'Last name is required for guest bookings');
-                }
-                if (empty($this->guest_email)) {
-                    $validator->errors()->add('guest_email', 'Email is required for booking confirmation');
-                }
-            }
-            
             // Validate travelers count matches declared count
             if ($this->has('travelers')) {
                 $declaredTotal = ($this->number_of_adults ?? 0) + ($this->number_of_children ?? 0);
@@ -97,5 +80,28 @@ class CreateBookingRequest extends FormRequest
                 }
             }
         });
+    }
+
+    /**
+     * Get validated data with additional validation logic
+     */
+    public function validated($key = null, $default = null)
+    {
+        $data = parent::validated($key, $default);
+        
+        // If not authenticated, require guest fields
+        if (!auth('sanctum')->check()) {
+            $this->validate([
+                'guest_first_name' => ['required', 'string', 'max:255'],
+                'guest_last_name' => ['required', 'string', 'max:255'],
+                'guest_email' => ['required', 'email', 'max:255'],
+            ], [
+                'guest_first_name.required' => 'First name is required for guest bookings',
+                'guest_last_name.required' => 'Last name is required for guest bookings',
+                'guest_email.required' => 'Email is required for booking confirmation',
+            ]);
+        }
+        
+        return $data;
     }
 }
