@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\V1\User\BookingController as UserBookingController;
 use App\Http\Controllers\Api\V1\Admin\BookingController as AdminBookingController;
 use App\Http\Controllers\Api\V1\TravelerController;
 use App\Http\Controllers\Api\V1\User\BookingSummaryController;
+use App\Http\Controllers\Api\V1\PaymentController;
+use App\Http\Controllers\Api\V1\PaystackWebhookController;
 
 
 
@@ -88,7 +90,7 @@ Route::prefix('v1')->group(function () {
     // Public booking routes
     Route::get('bookings/reference/{reference}', [UserBookingController::class, 'getByReference']);
     
-    // Guest booking creation
+    // Booking creation - supports both guest and authenticated
     Route::post('bookings', [UserBookingController::class, 'store']);
 
     // Booking summary (get pricing breakdown before booking)
@@ -102,6 +104,9 @@ Route::prefix('v1')->group(function () {
         Route::post('bookings/{id}/cancel', [UserBookingController::class, 'cancel']);
         Route::post('bookings/{id}/travelers', [UserBookingController::class, 'addTraveler']);
     });
+
+    // Public booking reference lookup (for guests)
+    Route::get('bookings/reference/{reference}', [UserBookingController::class, 'getByReference']);
 
     // Admin booking routes
     Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
@@ -128,4 +133,15 @@ Route::prefix('v1')->group(function () {
         Route::delete('/{travelerId}', [TravelerController::class, 'destroy']);
         Route::get('/{travelerId}/passport/download', [TravelerController::class, 'downloadPassport']);
     });
+});
+
+ // Payment routes
+Route::prefix('v1')->group(function () {
+    Route::post('payments/calculate', [PaymentController::class, 'calculatePayment']);
+    Route::post('bookings/{bookingId}/payments/initialize', [PaymentController::class, 'initializePayment']);
+    Route::get('payments/verify/{reference}', [PaymentController::class, 'verifyPayment']);
+    Route::get('bookings/{bookingId}/payments', [PaymentController::class, 'getBookingPayments']);
+    
+    // Paystack webhook (no authentication required)
+    Route::post('webhooks/paystack', [PaystackWebhookController::class, 'handleWebhook']);
 });

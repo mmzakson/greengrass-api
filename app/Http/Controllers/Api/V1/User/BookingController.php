@@ -51,65 +51,88 @@ class BookingController extends Controller
      * Create new booking
      */
     public function store(CreateBookingRequest $request): JsonResponse
-    {        
-        try {
-            $userId = auth()->check() ? auth()->id() : null;
-            
-            $booking = $this->bookingService->createBooking(
-                $request->validated(),
-                $userId
-            );
+{
+    try {
+        // Use Sanctum guard explicitly
+        $userId = auth('sanctum')->id();
+        
+        // Debug log (remove after testing)
+        \Log::info('Booking creation attempt', [
+            'has_token' => $request->bearerToken() !== null,
+            'user_id' => $userId,
+            'auth_check' => auth('sanctum')->check(),
+        ]);
+        
+        $booking = $this->bookingService->createBooking(
+            $request->validated(),
+            $userId
+        );
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Booking created successfully',
-                'data' => new BookingDetailResource($booking),
-            ], 201);
+        return response()->json([
+            'success' => true,
+            'message' => 'Booking created successfully',
+            'data' => new BookingDetailResource($booking),
+        ], 201);
 
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 400);
-        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+        ], 400);
     }
+}
 
     /**
      * Get single booking
      */
     public function show(string $id): JsonResponse
-    {
-        try {
-            $booking = $this->bookingService->getBookingById($id);
+{
+    try {
+        $booking = $this->bookingService->getBookingById($id);
 
-            if (!$booking) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Booking not found',
-                ], 404);
-            }
+        if (!$booking) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking not found',
+            ], 404);
+        }
 
-            // Verify ownership
-            if (auth()->check() && $booking->user_id !== auth()->id()) {
+        // Verify ownership for authenticated users
+        if (auth('sanctum')->check()) {
+            // If user is authenticated, they must own the booking
+            if ($booking->user_id !== auth('sanctum')->id()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthorized access to this booking',
                 ], 403);
             }
-
-            return response()->json([
-                'success' => true,
-                'data' => new BookingDetailResource($booking),
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch booking',
-                'error' => $e->getMessage(),
-            ], 500);
+        } else {
+            // For guest bookings, require booking reference or email verification
+            // For now, we'll just return unauthorized for non-authenticated access
+            if ($booking->user_id !== null) {
+                // This is a user booking but accessed without auth
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please login to view this booking',
+                ], 401);
+            }
+            // If it's a guest booking, you might want additional verification
+            // like email + booking reference
         }
+
+        return response()->json([
+            'success' => true,
+            'data' => new BookingDetailResource($booking),
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch booking',
+            'error' => $e->getMessage(),
+        ], 500);
     }
+}
 
     /**
      * Cancel booking
